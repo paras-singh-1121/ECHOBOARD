@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import axios from "axios";
 import { useAuth } from "../hooks/useAuth";
+import CaptionHelper from "../components/EchoAI/CaptionHelper";
 
 // 🔥 Time formatter
 const formatTime = (date) => {
@@ -110,7 +111,7 @@ function EchoWall() {
                 <div
                   key={post._id}
                   className="break-inside-avoid mb-6 p-4 rounded-2xl 
-                  bg-gradient-to-br from-[#111827] to-[#1f2937]
+                  bg-linear-to-br from-[#111827] to-[#1f2937]
                   border border-white/10 shadow-lg 
                   hover:shadow-cyan-500/20 hover:-translate-y-1 
                   transition duration-300"
@@ -119,7 +120,7 @@ function EchoWall() {
                   <div className="flex justify-between items-start mb-4">
 
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full flex items-center justify-center text-sm font-bold">
+                      <div className="w-9 h-9 bg-linear-to-r from-cyan-500 to-blue-500 rounded-full flex items-center justify-center text-sm font-bold">
                         {post.user?.username?.charAt(0).toUpperCase() || "U"}
                       </div>
 
