@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import Navbar from '../components/Navbar';
-import { PaperAirplaneIcon } from "@heroicons/react/24/solid";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 function EchoAI() {
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     title: '',
     subtitle: '',
@@ -12,6 +15,7 @@ function EchoAI() {
 
   const [response, setResponse] = useState('');
   const [loading, setLoading] = useState(false);
+  const [posting, setPosting] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -23,100 +27,166 @@ function EchoAI() {
     if (file) setFormData({ ...formData, image: file });
   };
 
+  // AI Generate
   const handleGenerate = async (e) => {
     e.preventDefault();
     setLoading(true);
     setResponse('');
 
     setTimeout(() => {
-      let output = '';
+  let output = "";
 
-      if (formData.title || formData.subtitle || formData.image) {
-        output = `Generated Blog Content:
-Title: ${formData.title}
-Subtitle: ${formData.subtitle}
-${formData.image ? 'Image uploaded and analyzed.' : ''}`;
-      } else if (formData.prompt) {
-        output = `AI Response:\n"${formData.prompt}"`;
-      } else {
-        output = 'Please provide title, subtitle, image, or prompt.';
+  if (formData.prompt) {
+    output = `AI Generated Content:\n${formData.prompt}`;
+  }
+
+  if (formData.title || formData.subtitle) {
+    output += `\n\nTitle: ${formData.title}\n${formData.subtitle}`;
+  }
+
+  if (formData.image) {
+    output += `\n[Image Included]`;
+  }
+
+  if (!output.trim()) {
+    output = "Please provide some input.";
+  }
+
+  setResponse(output);
+  setLoading(false);
+}, 1000);
+  };
+
+  // ✅ REAL BACKEND POST
+  const handlePost = async () => {
+    try {
+      setPosting(true);
+
+      let finalContent = "";
+
+// Always include manual content
+if (formData.title) finalContent += `Title: ${formData.title}\n`;
+if (formData.subtitle) finalContent += `${formData.subtitle}\n`;
+if (formData.prompt) finalContent += `${formData.prompt}\n`;
+
+// If AI response exists, append it instead of replacing
+if (response) {
+  finalContent += `\n${response}`;
+}
+
+      if (!finalContent.trim()) {
+        alert("Nothing to post!");
+        return;
       }
 
-      setResponse(output);
-      setLoading(false);
-    }, 1500);
+      const data = new FormData();
+      data.append("text", finalContent);
+
+      if (formData.image) {
+        data.append("image", formData.image);
+      }
+      const token = localStorage.getItem("token");
+      
+      await axios.post("http://localhost:5000/api/posts", data, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      // Reset
+      setFormData({
+        title: '',
+        subtitle: '',
+        prompt: '',
+        image: null,
+      });
+
+      setResponse("");
+
+      alert("Posted successfully 🚀");
+
+      // 🔥 Redirect to EchoWall
+      navigate("/echowall");
+
+    } catch (error) {
+      console.error(error);
+      alert("Post failed ❌");
+    } finally {
+      setPosting(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-[#0d1117] kode-mono-fontStyle text-white">
+    <div className="min-h-screen bg-[#0d1117] text-white kode-mono-fontStyle">
       <Navbar />
 
-      <div className="max-w-3xl mx-auto p-6 flex flex-col space-y-6">
-        <h2 className="text-2xl font-bold text-center">EchoAI Content Generator</h2>
+      <div className="max-w-3xl mx-auto p-6 space-y-6">
+        <h2 className="text-2xl font-bold text-center">
+          EchoAI Content Generator
+        </h2>
 
+        {/* FORM */}
         <form
           onSubmit={handleGenerate}
           className="p-6 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-lg shadow space-y-4"
         >
-          <div>
-            <label className="text-sm font-medium text-white/70">Title</label>
-            <input
-              type="text"
-              name="title"
-              value={formData.title}
-              onChange={handleChange}
-              placeholder="Enter blog title"
-              className="mt-1 block w-full px-3 py-2 rounded-lg bg-transparent border border-white/20 text-white placeholder-gray-400 focus:ring-1 focus:ring-cyan-500 focus:outline-none"
-            />
-          </div>
+          <input
+            type="text"
+            name="title"
+            value={formData.title}
+            onChange={handleChange}
+            placeholder="Title"
+            className="w-full px-3 py-2 rounded-lg bg-transparent border border-white/20"
+          />
 
-          <div>
-            <label className="text-sm font-medium text-white/70">Subtitle</label>
-            <input
-              type="text"
-              name="subtitle"
-              value={formData.subtitle}
-              onChange={handleChange}
-              placeholder="Enter blog subtitle"
-              className="mt-1 block w-full px-3 py-2 rounded-lg bg-transparent border border-white/20 text-white placeholder-gray-400 focus:ring-1 focus:ring-cyan-500 focus:outline-none"
-            />
-          </div>
+          <input
+            type="text"
+            name="subtitle"
+            value={formData.subtitle}
+            onChange={handleChange}
+            placeholder="Subtitle"
+            className="w-full px-3 py-2 rounded-lg bg-transparent border border-white/20"
+          />
 
-          <div>
-            <label className="text-sm font-medium text-white/70">Upload Image</label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              className="mt-1 block w-full text-gray-300"
-            />
-          </div>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+          />
 
-          <div>
-            <label className="text-sm font-medium text-white/70">Prompt / Description</label>
-            <textarea
-              name="prompt"
-              value={formData.prompt}
-              onChange={handleChange}
-              placeholder="Or write a simple prompt for AI"
-              className="mt-1 block w-full px-3 py-2 rounded-lg bg-transparent border border-white/20 text-white placeholder-gray-400 focus:ring-1 focus:ring-cyan-500 focus:outline-none"
-            />
-          </div>
+          <textarea
+            name="prompt"
+            value={formData.prompt}
+            onChange={handleChange}
+            placeholder="Prompt or write directly..."
+            className="w-full px-3 py-2 rounded-lg bg-transparent border border-white/20"
+          />
 
           <button
             type="submit"
-            disabled={loading}
-            className="w-full py-2 text-white font-semibold rounded-lg bg-cyan-900 hover:bg-cyan-800 transition"
+            className="w-full py-2 bg-cyan-900 rounded-lg"
           >
-            {loading ? 'Generating...' : 'Generate Content'}
+            {loading ? 'Generating...' : 'Generate'}
           </button>
         </form>
 
+        {/* AI OUTPUT */}
         {response && (
-          <div className="p-6 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-lg shadow">
-            <h3 className="text-lg font-bold mb-2 text-white/90">AI Generated Content:</h3>
-            <p className="whitespace-pre-line text-gray-200">{response}</p>
+          <div className="p-4 border border-white/10 rounded-lg bg-white/5">
+            <p className="whitespace-pre-line">{response}</p>
           </div>
+        )}
+
+        {/* POST BUTTON */}
+        {(response || formData.title || formData.prompt) && (
+          <button
+            onClick={handlePost}
+            disabled={posting}
+            className="w-full py-3 bg-green-700 rounded-lg font-semibold hover:bg-green-600"
+          >
+            {posting ? 'Posting...' : 'Post to EchoWall 🚀'}
+          </button>
         )}
       </div>
     </div>

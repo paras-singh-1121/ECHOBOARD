@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import User from "../models/User.js";
+import User from "../models/User.model.js";
 import {
   generateAccessToken,
   generateRefreshToken
@@ -24,7 +24,7 @@ export const signup = async (req, res, next) => {
       name,
       username,
       email,
-      password: hashedPassword
+      password
     });
 
     const accessToken = generateAccessToken(user._id);
@@ -45,7 +45,15 @@ export const signup = async (req, res, next) => {
       sameSite: "strict"
     });
 
-    res.status(201).json({ message: "Signup successful" });
+    res.status(201).json({
+  success: true,
+  token: accessToken,
+  user: {
+    _id: user._id,
+    username: user.username,
+    email: user.email
+  }
+});
 
   } catch (error) {
     next(error);

@@ -4,12 +4,14 @@ import cookieParser from "cookie-parser";
 import rateLimit from "express-rate-limit";
 
 import authRoutes from "./routes/auth.routes.js";
+import postRoutes from "./routes/post.routes.js";
 import errorHandler from "./middleware/error.middleware.js";
 
 const app = express();
 
 // Core Middleware
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 app.use(
@@ -27,8 +29,15 @@ app.use(
   })
 );
 
+app.use("/uploads", express.static("uploads"));
+
 // Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/posts", postRoutes);
+
+app.get("/", (req, res) => {
+  res.send("API Running 🚀");
+});
 
 // Global Error Handler
 app.use(errorHandler);
