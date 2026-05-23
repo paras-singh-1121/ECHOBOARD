@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import Navbar from '../components/Navbar';
+import React, { useState } from "react";
+import Navbar from "../components/Navbar";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
@@ -7,13 +7,13 @@ function EchoAI() {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    title: '',
-    subtitle: '',
-    prompt: '',
+    title: "",
+    subtitle: "",
+    prompt: "",
     image: null,
   });
 
-  const [response, setResponse] = useState('');
+  const [response, setResponse] = useState("");
   const [loading, setLoading] = useState(false);
   const [posting, setPosting] = useState(false);
 
@@ -27,52 +27,54 @@ function EchoAI() {
     if (file) setFormData({ ...formData, image: file });
   };
 
-  // AI Generate
+  // 🔥 REAL AI GENERATE (Gemini Backend)
   const handleGenerate = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setResponse('');
 
-    setTimeout(() => {
-  let output = "";
+    if (!formData.title) {
+      alert("Title is required for AI generation");
+      return;
+    }
 
-  if (formData.prompt) {
-    output = `AI Generated Content:\n${formData.prompt}`;
-  }
+    try {
+      setLoading(true);
+      setResponse("");
 
-  if (formData.title || formData.subtitle) {
-    output += `\n\nTitle: ${formData.title}\n${formData.subtitle}`;
-  }
+      const res = await axios.post(
+        "http://localhost:5000/api/ai/generate",
+        {
+          title: formData.title,
+          subtitle: formData.subtitle,
+          prompt: formData.prompt,
+        }
+      );
 
-  if (formData.image) {
-    output += `\n[Image Included]`;
-  }
+      setResponse(res.data.content);
 
-  if (!output.trim()) {
-    output = "Please provide some input.";
-  }
-
-  setResponse(output);
-  setLoading(false);
-}, 1000);
+    } catch (error) {
+      console.error(error);
+      alert("AI generation failed ❌");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // ✅ REAL BACKEND POST
+  // POST TO BACKEND
   const handlePost = async () => {
     try {
       setPosting(true);
 
       let finalContent = "";
 
-// Always include manual content
-if (formData.title) finalContent += `Title: ${formData.title}\n`;
-if (formData.subtitle) finalContent += `${formData.subtitle}\n`;
-if (formData.prompt) finalContent += `${formData.prompt}\n`;
-
-// If AI response exists, append it instead of replacing
-if (response) {
-  finalContent += `\n${response}`;
-}
+      // AI content priority
+      if (response) {
+        finalContent = response;
+      } else {
+        // fallback manual content
+        if (formData.title) finalContent += `${formData.title}\n`;
+        if (formData.subtitle) finalContent += `${formData.subtitle}\n`;
+        if (formData.prompt) finalContent += `${formData.prompt}\n`;
+      }
 
       if (!finalContent.trim()) {
         alert("Nothing to post!");
@@ -85,8 +87,9 @@ if (response) {
       if (formData.image) {
         data.append("image", formData.image);
       }
+
       const token = localStorage.getItem("token");
-      
+
       await axios.post("http://localhost:5000/api/posts", data, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -94,19 +97,17 @@ if (response) {
         },
       });
 
-      // Reset
+      // RESET
       setFormData({
-        title: '',
-        subtitle: '',
-        prompt: '',
+        title: "",
+        subtitle: "",
+        prompt: "",
         image: null,
       });
 
       setResponse("");
 
       alert("Posted successfully 🚀");
-
-      // 🔥 Redirect to EchoWall
       navigate("/echowall");
 
     } catch (error) {
@@ -118,12 +119,12 @@ if (response) {
   };
 
   return (
-    <div className="min-h-screen bg-[#0d1117] text-white kode-mono-fontStyle">
+    <div className="min-h-screen bg-gradient-to-br from-[#0d1117] via-[#0f172a] to-black text-white kode-mono-fontStyle">
       <Navbar />
 
       <div className="max-w-3xl mx-auto p-6 space-y-6">
-        <h2 className="text-2xl font-bold text-center">
-          EchoAI Content Generator
+        <h2 className="text-3xl font-bold text-center text-cyan-400">
+          ✨ EchoAI Content Generator
         </h2>
 
         {/* FORM */}
@@ -136,8 +137,8 @@ if (response) {
             name="title"
             value={formData.title}
             onChange={handleChange}
-            placeholder="Title"
-            className="w-full px-3 py-2 rounded-lg bg-transparent border border-white/20"
+            placeholder="Title (required)"
+            className="w-full px-3 py-2 rounded-lg bg-transparent border border-white/20 focus:border-cyan-500 outline-none"
           />
 
           <input
@@ -145,36 +146,50 @@ if (response) {
             name="subtitle"
             value={formData.subtitle}
             onChange={handleChange}
-            placeholder="Subtitle"
-            className="w-full px-3 py-2 rounded-lg bg-transparent border border-white/20"
-          />
-
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageChange}
+            placeholder="Subtitle (optional)"
+            className="w-full px-3 py-2 rounded-lg bg-transparent border border-white/20 focus:border-cyan-500 outline-none"
           />
 
           <textarea
             name="prompt"
             value={formData.prompt}
             onChange={handleChange}
-            placeholder="Prompt or write directly..."
-            className="w-full px-3 py-2 rounded-lg bg-transparent border border-white/20"
+            placeholder="Extra prompt (tone, style, audience...)"
+            className="w-full px-3 py-2 rounded-lg bg-transparent border border-white/20 focus:border-cyan-500 outline-none"
+            rows={3}
           />
 
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+            className="text-sm text-gray-300"
+          />
+
+          {/* GENERATE BUTTON */}
           <button
             type="submit"
-            className="w-full py-2 bg-cyan-900 rounded-lg"
+            className="w-full py-2 rounded-lg font-semibold 
+            bg-gradient-to-r from-cyan-500 to-blue-500 
+            hover:opacity-90 transition"
           >
-            {loading ? 'Generating...' : 'Generate'}
+            {loading ? "Generating..." : "✨ Generate with AI"}
           </button>
         </form>
 
         {/* AI OUTPUT */}
         {response && (
-          <div className="p-4 border border-white/10 rounded-lg bg-white/5">
-            <p className="whitespace-pre-line">{response}</p>
+          <div className="p-5 border border-white/10 rounded-xl bg-white/5 shadow">
+            <h3 className="text-lg font-semibold text-cyan-400 mb-2">
+              AI Generated Content
+            </h3>
+
+            <textarea
+              value={response}
+              onChange={(e) => setResponse(e.target.value)}
+              className="w-full bg-transparent text-gray-200 text-sm whitespace-pre-line outline-none"
+              rows={8}
+            />
           </div>
         )}
 
@@ -183,9 +198,10 @@ if (response) {
           <button
             onClick={handlePost}
             disabled={posting}
-            className="w-full py-3 bg-green-700 rounded-lg font-semibold hover:bg-green-600"
+            className="w-full py-3 rounded-xl font-semibold 
+            bg-green-600 hover:bg-green-500 transition"
           >
-            {posting ? 'Posting...' : 'Post to EchoWall 🚀'}
+            {posting ? "Posting..." : "🚀 Post to EchoWall"}
           </button>
         )}
       </div>

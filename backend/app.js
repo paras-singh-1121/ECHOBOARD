@@ -5,6 +5,9 @@ import rateLimit from "express-rate-limit";
 
 import authRoutes from "./routes/auth.routes.js";
 import postRoutes from "./routes/post.routes.js";
+import aiRoutes from "./routes/ai.routes.js";
+import chatRoutes from "./routes/chat.routes.js";
+
 import errorHandler from "./middleware/error.middleware.js";
 
 const app = express();
@@ -34,6 +37,8 @@ app.use("/uploads", express.static("uploads"));
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/posts", postRoutes);
+app.use("/api/ai", aiRoutes);
+app.use("/api/chat", chatRoutes);
 
 app.get("/", (req, res) => {
   res.send("API Running 🚀");

@@ -2,10 +2,10 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import ManageProfile from "./pages/ManageProfile";
-// import EchoChat from "./pages/EchoChat";
+import EchoChat from "./pages/EchoChat";
 import EchoAI from "./pages/EchoAI";
-import Signup from "./pages/Signup"; // your signup page
-import Login from "./pages/Login";   // your login page
+import Signup from "./pages/Signup"; 
+import Login from "./pages/Login";
 import EchoWall from "./pages/EchoWall";
 import ProtectedRoute from "./routes/ProtectedRoute";
 
@@ -22,7 +22,7 @@ function App() {
           }
         />
         <Route path="/manageprofile" element={<ManageProfile />} />
-        {/* <Route path="/echochat" element={<EchoChat />} /> */}
+        <Route path="/echochat" element={<EchoChat />} />
         <Route path="/echowall" element={<EchoWall />} />
         <Route path="/echoai" element={<EchoAI />} />
         {/* <Route path="*" element={<Navigate to="/signup" />} /> */}

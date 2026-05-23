@@ -2,8 +2,14 @@ import React, { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import axios from "axios";
 import { useAuth } from "../hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
-// 🔥 Time formatter
+import {
+  ChatBubbleLeftRightIcon,
+  TrashIcon,
+} from "@heroicons/react/24/solid";
+
+// Time formatter
 const formatTime = (date) => {
   const now = new Date();
   const postDate = new Date(date);
@@ -12,12 +18,19 @@ const formatTime = (date) => {
   if (diff < 60) return "Just now";
   if (diff < 3600) return `${Math.floor(diff / 60)} min ago`;
   if (diff < 86400) return `${Math.floor(diff / 3600)} hr ago`;
+
   return postDate.toLocaleDateString();
 };
 
-// 🔥 CLEAN PARSER (simple + stable)
+// CLEAN PARSER
 const parsePost = (text) => {
-  if (!text) return { title: "", subtitle: "", content: "" };
+  if (!text) {
+    return {
+      title: "",
+      subtitle: "",
+      content: "",
+    };
+  }
 
   let cleaned = text.split("AI Generated Content:")[0];
   cleaned = cleaned.replace(/Title:/g, "").trim();
@@ -37,9 +50,11 @@ const parsePost = (text) => {
 function EchoWall() {
   const [posts, setPosts] = useState([]);
 
-  // ✅ AUTH SAFE
   const { user: currentUser } = useAuth() || {};
 
+  const navigate = useNavigate();
+
+  // FETCH POSTS
   useEffect(() => {
     const fetchPosts = async () => {
       try {
@@ -53,8 +68,14 @@ function EchoWall() {
     fetchPosts();
   }, []);
 
-  // 🔥 DELETE POST
+  // DELETE POST
   const handleDelete = async (postId) => {
+    const confirmDelete = window.confirm(
+      "Delete this post?"
+    );
+
+    if (!confirmDelete) return;
+
     try {
       const token = localStorage.getItem("token");
 
@@ -67,11 +88,35 @@ function EchoWall() {
         }
       );
 
-      setPosts((prev) => prev.filter((p) => p._id !== postId));
+      setPosts((prev) =>
+        prev.filter((p) => p._id !== postId)
+      );
     } catch (error) {
       console.error(error);
-      alert(error.response?.data?.message || "Delete failed");
+
+      alert(
+        error.response?.data?.message ||
+          "Delete failed"
+      );
     }
+  };
+
+  // OPEN CHAT
+  const openChat = (user) => {
+    if (!user?._id) return;
+
+    if (
+      String(user._id) ===
+      String(currentUser?._id)
+    ) {
+      return;
+    }
+
+    navigate("/echochat", {
+      state: {
+        selectedUser: user,
+      },
+    });
   };
 
   return (
@@ -79,12 +124,12 @@ function EchoWall() {
       <Navbar />
 
       <div className="p-6 max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold mb-6 text-center">
+        <h1 className="text-3xl font-bold mb-8 text-center">
           EchoWall
         </h1>
 
+        {/* MASONRY */}
         <div className="columns-1 sm:columns-2 lg:columns-3 gap-6 space-y-6">
-
           {posts.length === 0 ? (
             <p className="text-gray-400 text-center">
               No posts yet...
@@ -93,89 +138,219 @@ function EchoWall() {
             posts.map((post) => {
               const parsed = parsePost(post.text);
 
-              // ✅ SAFE ID handling (IMPORTANT FIX)
               const postUserId =
                 typeof post.user === "object"
                   ? post.user?._id
                   : post.user;
 
-              const currentUserId = currentUser?._id;
+              const currentUserId =
+                currentUser?._id;
 
               const isOwner =
                 currentUserId &&
                 postUserId &&
-                String(postUserId) === String(currentUserId);
+                String(postUserId) ===
+                  String(currentUserId);
 
               return (
                 <div
                   key={post._id}
-                  className="break-inside-avoid mb-6 p-4 rounded-2xl 
-                  bg-gradient-to-br from-[#111827] to-[#1f2937]
-                  border border-white/10 shadow-lg 
-                  hover:shadow-cyan-500/20 hover:-translate-y-1 
-                  transition duration-300"
+                  className="
+                  break-inside-avoid
+                  mb-6
+                  rounded-2xl
+                  overflow-hidden
+                  bg-gradient-to-br
+                  from-[#111827]
+                  to-[#1f2937]
+                  border border-white/10
+                  shadow-lg
+                  hover:shadow-cyan-500/20
+                  hover:-translate-y-1
+                  transition duration-300
+                "
                 >
-                  {/* HEADER */}
-                  <div className="flex justify-between items-start mb-4">
+                  {/* IMAGE FIRST */}
+                  {post.image && (
+                    <div className="relative">
+                      <img
+                        src={post.image}
+                        alt="post"
+                        className="
+                        w-full
+                        max-h-[420px]
+                        object-cover
+                      "
+                      />
 
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full flex items-center justify-center text-sm font-bold">
-                        {post.user?.username?.charAt(0).toUpperCase() || "U"}
-                      </div>
+                      {/* TOP RIGHT ACTIONS */}
+                      <div
+                        className="
+                        absolute top-3 right-3
+                        flex items-center gap-2
+                      "
+                      >
+                        {/* CHAT ICON */}
+                        {!isOwner && (
+                          <button
+                            onClick={() =>
+                              openChat(post.user)
+                            }
+                            className="
+                            bg-black/50
+                            backdrop-blur-md
+                            p-2
+                            rounded-full
+                            hover:bg-cyan-600
+                            transition
+                          "
+                            title="Chat"
+                          >
+                            <ChatBubbleLeftRightIcon className="h-5 w-5 text-white" />
+                          </button>
+                        )}
 
-                      <div className="flex flex-col">
-                        <span className="text-sm font-semibold">
-                          {post.user?.username ||
-                            post.user?.email?.split("@")[0] ||
-                            "User"}
-                        </span>
-
-                        <span className="text-xs text-gray-400">
-                          {formatTime(post.createdAt)}
-                        </span>
+                        {/* DELETE ICON */}
+                        {isOwner && (
+                          <button
+                            onClick={() =>
+                              handleDelete(
+                                post._id
+                              )
+                            }
+                            className="
+                            bg-black/50
+                            backdrop-blur-md
+                            p-2
+                            rounded-full
+                            hover:bg-red-600
+                            transition
+                          "
+                            title="Delete"
+                          >
+                            <TrashIcon className="h-5 w-5 text-white" />
+                          </button>
+                        )}
                       </div>
                     </div>
-
-                    {/* 🔥 DELETE BUTTON (ONLY OWNER) */}
-                    {isOwner && (
-                      <button
-                        onClick={() => handleDelete(post._id)}
-                        className="text-red-400 hover:text-red-500 p-1 rounded-full transition"
-                        title="Delete post"
-                      >
-                        🗑
-                      </button>
-                    )}
-                  </div>
+                  )}
 
                   {/* CONTENT */}
-                  {parsed.title && (
-                    <h2 className="text-lg font-bold text-cyan-400 mb-1">
-                      {parsed.title}
-                    </h2>
-                  )}
+                  <div className="p-4">
+                    {/* HEADER */}
+                    <div className="flex justify-between items-start mb-4">
+                      <div
+                        onClick={() =>
+                          openChat(post.user)
+                        }
+                        className="
+                        flex items-center gap-3
+                        cursor-pointer group
+                      "
+                      >
+                        <div
+                          className="
+                          w-10 h-10
+                          bg-gradient-to-r
+                          from-cyan-500
+                          to-blue-500
+                          rounded-full
+                          flex items-center
+                          justify-center
+                          text-sm font-bold
+                        "
+                        >
+                          {post.user?.username
+                            ?.charAt(0)
+                            .toUpperCase() || "U"}
+                        </div>
 
-                  {parsed.subtitle && (
-                    <p className="text-sm text-white mb-2">
-                      {parsed.subtitle}
-                    </p>
-                  )}
+                        <div className="flex flex-col">
+                          <span
+                            className="
+                            text-sm font-semibold
+                            group-hover:text-cyan-400
+                            transition
+                          "
+                          >
+                            {post.user?.username ||
+                              post.user?.email?.split(
+                                "@"
+                              )[0] ||
+                              "User"}
+                          </span>
 
-                  {parsed.content && (
-                    <p className="text-gray-300 text-sm whitespace-pre-line mb-3">
-                      {parsed.content}
-                    </p>
-                  )}
+                          <span className="text-xs text-gray-400">
+                            {formatTime(
+                              post.createdAt
+                            )}
+                          </span>
+                        </div>
+                      </div>
 
-                  {/* IMAGE */}
-                  {post.image && (
-                    <img
-                      src={post.image}
-                      alt="post"
-                      className="w-full rounded-xl object-cover mt-2 
-                      hover:scale-[1.02] transition"
-                    />
-                  )}
+                      {/* ICONS IF NO IMAGE */}
+                      {!post.image && (
+                        <div className="flex gap-2">
+                          {!isOwner && (
+                            <button
+                              onClick={() =>
+                                openChat(
+                                  post.user
+                                )
+                              }
+                              className="
+                              p-2 rounded-full
+                              bg-cyan-700/30
+                              hover:bg-cyan-600
+                              transition
+                            "
+                            >
+                              <ChatBubbleLeftRightIcon className="h-5 w-5" />
+                            </button>
+                          )}
+
+                          {isOwner && (
+                            <button
+                              onClick={() =>
+                                handleDelete(
+                                  post._id
+                                )
+                              }
+                              className="
+                              p-2 rounded-full
+                              bg-red-700/30
+                              hover:bg-red-600
+                              transition
+                            "
+                            >
+                              <TrashIcon className="h-5 w-5" />
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* TITLE */}
+                    {parsed.title && (
+                      <h2 className="text-xl font-bold text-cyan-400 mb-2">
+                        {parsed.title}
+                      </h2>
+                    )}
+
+                    {/* SUBTITLE */}
+                    {parsed.subtitle && (
+                      <p className="text-sm text-white mb-3">
+                        {parsed.subtitle}
+                      </p>
+                    )}
+
+                    {/* CONTENT */}
+                    {parsed.content && (
+                      <p className="text-gray-300 text-sm whitespace-pre-line leading-6">
+                        {parsed.content}
+                      </p>
+                    )}
+                  </div>
                 </div>
               );
             })
