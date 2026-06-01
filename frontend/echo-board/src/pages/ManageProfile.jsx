@@ -1,15 +1,30 @@
 import React, { useState, useEffect } from 'react';
+import { updateProfile } from "../api/profile.api";
 import { EyeIcon, EyeSlashIcon, UserCircleIcon } from "@heroicons/react/24/solid";
 import Navbar from '../components/Navbar';
 
 function ManageProfile() {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    gender: '',
-    dob: '',
-  });
+  name: '',
+  email: '',
+  password: '',
+  gender: '',
+  dob: '',
+  professions: [],
+});
+
+const professionOptions = [
+  "Developer",
+  "Writer",
+  "Poet",
+  "Designer",
+  "Photographer",
+  "Musician",
+  "Student",
+  "Entrepreneur",
+  "Content Creator",
+  "AI Enthusiast",
+];
 
   const [showPassword, setShowPassword] = useState(false);
   const [profilePic, setProfilePic] = useState(null);
@@ -33,15 +48,32 @@ function ManageProfile() {
     setFormData({ ...formData, [name]: value });
   };
 
+  const handleProfessionChange = (profession) => {
+  const updatedProfessions = formData.professions.includes(profession)
+    ? formData.professions.filter((p) => p !== profession)
+    : [...formData.professions, profession];
+
+  setFormData({
+    ...formData,
+    professions: updatedProfessions,
+  });
+};
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) setProfilePic(URL.createObjectURL(file));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+  try {
+    await updateProfile(formData);
     alert("Profile updated successfully!");
-  };
+  } catch (error) {
+    console.log(error);
+    alert("Failed to update profile");
+  }
+};
+
 
   return (
     <div className="min-h-screen bg-[#0d1117] kode-mono-fontStyle">
@@ -129,6 +161,49 @@ function ManageProfile() {
               <option className="text-black" value="other">Other</option>
             </select>
           </div>
+
+ <div>
+  <label className="text-sm font-medium text-gray-300">
+    Profession
+  </label>
+
+  <select
+    name="profession"
+    onChange={(e) =>
+      setFormData({
+        ...formData,
+        professions: [e.target.value],
+      })
+    }
+    className="mt-1 block w-full rounded-lg px-3 py-2 bg-white/10 text-white border border-gray-600 focus:outline-none"
+  >
+    <option value="">Select Profession</option>
+
+    <option className="text-black" value="Developer">
+      Developer
+    </option>
+
+    <option className="text-black" value="Writer">
+      Writer
+    </option>
+
+    <option className="text-black" value="Poet">
+      Poet
+    </option>
+
+    <option className="text-black" value="Designer">
+      Designer
+    </option>
+
+    <option className="text-black" value="Student">
+      Student
+    </option>
+
+    <option className="text-black" value="Musician">
+      Musician
+    </option>
+  </select>
+</div>
 
           <div>
             <label className="text-sm font-medium text-gray-300">Date of Birth</label>
