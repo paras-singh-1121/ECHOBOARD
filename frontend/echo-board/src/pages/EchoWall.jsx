@@ -58,7 +58,7 @@ function EchoWall() {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/posts");
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/posts`);
         setPosts(res.data);
       } catch (error) {
         console.error(error);
@@ -80,7 +80,7 @@ function EchoWall() {
       const token = localStorage.getItem("token");
 
       await axios.delete(
-        `http://localhost:5000/api/posts/${postId}`,
+        `${import.meta.env.VITE_API_URL}/api/posts/${postId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

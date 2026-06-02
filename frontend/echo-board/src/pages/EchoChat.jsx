@@ -18,8 +18,8 @@ import Navbar from "../components/Navbar";
 import { useAuth } from "../hooks/useAuth";
 
 
-const socket = io("http://localhost:5000", {
-  transports: ["websocket"],
+const socket = io(import.meta.env.VITE_API_URL, {
+  transports: ["websocket", "polling"],
 });
 
 function EchoChat() {
@@ -114,9 +114,7 @@ function EchoChat() {
     const fetchChats = async () => {
       try {
         const res =
-          await axios.get(
-            `http://localhost:5000/api/chat/users/${user._id}`
-          );
+          await axios.get(`${import.meta.env.VITE_API_URL}/api/chat/users/${user._id}`);
 
         setChatUsers(res.data);
       } catch (error) {
@@ -148,7 +146,7 @@ function EchoChat() {
         try {
           const res =
             await axios.get(
-              `http://localhost:5000/api/chat/${roomId}`
+              `${import.meta.env.VITE_API_URL}/api/chat/${roomId}`
             );
 
           setMessages(res.data);

@@ -28,7 +28,7 @@ const CaptionHelper = ({ onSelect, currentDraft }) => {
               className="suggestion-item" 
               onClick={() => {
                 onSelect(text);
-                setOptions([]); // Clear options after selection
+                setOptions([]); 
               }}
             >
               {text}
