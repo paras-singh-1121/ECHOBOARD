@@ -41,7 +41,7 @@ function EchoAI() {
       setResponse("");
 
       const res = await axios.post(
-       `${import.meta.env.VITE_API_URL}/api/ai/generate`,
+       `${import.meta.env.VITE_API_URL}/ai/generate`,
         {
           title: formData.title,
           subtitle: formData.subtitle,
@@ -90,7 +90,7 @@ function EchoAI() {
 
       const token = localStorage.getItem("token");
 
-      await axios.post(`${import.meta.env.VITE_API_URL}/api/posts`, data, {
+      await axios.post(`${import.meta.env.VITE_API_URL}/posts`, data, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
