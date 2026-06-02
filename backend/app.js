@@ -7,6 +7,7 @@ import authRoutes from "./routes/auth.routes.js";
 import postRoutes from "./routes/post.routes.js";
 import aiRoutes from "./routes/ai.routes.js";
 import chatRoutes from "./routes/chat.routes.js";
+import profileRoutes from "./routes/profile.routes.js";
 
 import errorHandler from "./middleware/error.middleware.js";
 
@@ -20,7 +21,7 @@ app.use(cookieParser());
 app.use(
   cors({
     origin: "http://localhost:5173",
-    credentials: true
+    credentials: true,
   })
 );
 
@@ -28,7 +29,7 @@ app.use(
 app.use(
   rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 200
+    max: 200,
   })
 );
 
@@ -39,6 +40,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/api/profile", profileRoutes);
 
 app.get("/", (req, res) => {
   res.send("API Running 🚀");

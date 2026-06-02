@@ -1,9 +1,25 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import { Link } from "react-router-dom";
+import { getProfile } from "../api/profile.api";
 
 function Dashboard() {
   const user = JSON.parse(localStorage.getItem("user")) || {};
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() => {
+  const fetchProfile = async () => {
+    try {
+      const res = await getProfile();
+
+      setProfile(res.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  fetchProfile();
+}, []);
 
   return (
     <div className="min-h-screen bg-[#0d1117] text-white kode-mono-fontStyle">
@@ -11,9 +27,14 @@ function Dashboard() {
 
       <div className="max-w-6xl mx-auto px-6 py-10">
         
-        <h1 className="text-3xl font-bold mb-3">
-          Welcome back, {user?.username || "User"} 👋
-        </h1>
+        <h1 className="text-3xl font-bold mb-2">
+  Welcome back, {profile?.name || user?.username || "User"} 👋
+</h1>
+
+<p className="text-cyan-400 mb-4">
+  {profile?.professions?.join(" • ")}
+</p>
+
         <p className="text-gray-400 mb-10">
           Manage your activity, explore new features, and stay connected.
         </p>
